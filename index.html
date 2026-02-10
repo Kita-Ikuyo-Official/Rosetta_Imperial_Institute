@@ -1,231 +1,265 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ROSETTA | VOID-MAPPING</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>罗塞塔帝国研究所 | R.I.R ARCHIVE</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Noto+Sans+SC:wght@400;500;700;900&family=Orbitron:wght@400;700;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+--y:#f0c850;--y2:#d4a828;--y3:#a07818;
+--bk:#0c0c0c;--bk2:#141416;--bk3:#1c1c20;--bk4:#242428;
+--w:#e8e6e0;--w2:#b0aea6;--w3:#787672;
+--r:#c83030;--r2:#801818;
+--acc:#f0c850;
+}
+html{scroll-behavior:smooth}
+body{background:var(--bk);color:var(--w);font-family:'Noto Sans SC','Rajdhani',sans-serif;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:var(--bk)}
+::-webkit-scrollbar-thumb{background:var(--y3)}
 
-        :root {
-            --bg: #0a0a0a;
-            --fg: #ffffff;
-            --dim: #444;
-            --accent: #ff3e3e; /* 罗塞塔警告色 */
-            --grid-size: 50px;
-        }
+/* === SCAN LINES OVERLAY === */
+.scanlines{position:fixed;inset:0;z-index:9998;pointer-events:none;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,.03) 2px,rgba(0,0,0,.03) 4px)}
 
-        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
+/* === LOADER === */
+#loader{position:fixed;inset:0;background:var(--bk);z-index:9999;display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .8s}
+#loader.out{opacity:0;pointer-events:none}
+.ld-box{width:80px;height:80px;border:2px solid var(--y);position:relative;animation:ldSpin 3s linear infinite}
+.ld-box::before{content:'';position:absolute;inset:8px;border:1px solid var(--y3);animation:ldSpin 2s linear infinite reverse}
+.ld-box::after{content:'';position:absolute;inset:20px;background:var(--y);opacity:.6;animation:ldPulse 1.5s ease-in-out infinite}
+@keyframes ldSpin{to{transform:rotate(360deg)}}
+@keyframes ldPulse{0%,100%{opacity:.3;transform:scale(.8)}50%{opacity:.8;transform:scale(1)}}
+.ld-text{margin-top:20px;font-family:'Orbitron',monospace;font-size:10px;color:var(--y);letter-spacing:6px;animation:ldPulse 1.5s ease-in-out infinite}
 
-        body {
-            background-color: var(--bg);
-            color: var(--fg);
-            font-family: 'Space Mono', monospace;
-            overflow: hidden;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
+/* === NAV === */
+nav{position:fixed;top:0;left:0;right:0;z-index:200;height:48px;background:rgba(12,12,12,.92);backdrop-filter:blur(8px);display:flex;align-items:center;padding:0 24px;border-bottom:1px solid rgba(240,200,80,.12);transition:transform .3s}
+nav.hide{transform:translateY(-100%)}
+.nav-brand{font-family:'Orbitron',monospace;font-weight:900;font-size:13px;color:var(--y);letter-spacing:3px;cursor:pointer;display:flex;align-items:center;gap:10px}
+.nav-brand .sq{width:10px;height:10px;background:var(--y);display:inline-block}
+.nav-tabs{display:flex;gap:0;margin-left:40px}
+.nav-tab{padding:14px 20px;font-family:'Rajdhani','Noto Sans SC',sans-serif;font-weight:700;font-size:12px;letter-spacing:2px;color:var(--w3);cursor:pointer;border-bottom:2px solid transparent;transition:all .2s;text-transform:uppercase;position:relative}
+.nav-tab:hover{color:var(--w)}
+.nav-tab.active{color:var(--y);border-bottom-color:var(--y)}
+.nav-tab.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:1px;background:var(--y);box-shadow:0 0 8px var(--y)}
+.nav-r{margin-left:auto;font-family:'Orbitron',monospace;font-size:9px;color:var(--w3);letter-spacing:2px}
 
-        /* 虚空背景网格 */
-        .void-grid {
-            position: fixed;
-            top: 0; left: 0; width: 200%; height: 200%;
-            background-image: 
-                linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
-                linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
-            background-size: var(--grid-size) var(--grid-size);
-            z-index: -1;
-            transform: translate(-25%, -25%);
-            animation: drift 100s linear infinite;
-        }
+/* === HERO === */
+#hero{height:100vh;position:relative;display:flex;align-items:center;overflow:hidden}
+.hero-grid{position:absolute;inset:0;background-image:
+  linear-gradient(rgba(240,200,80,.03) 1px,transparent 1px),
+  linear-gradient(90deg,rgba(240,200,80,.03) 1px,transparent 1px);
+  background-size:60px 60px;animation:gridDrift 20s linear infinite}
+@keyframes gridDrift{to{background-position:60px 60px}}
+.hero-diag{position:absolute;top:-20%;right:-10%;width:70%;height:140%;background:linear-gradient(135deg,transparent 48%,rgba(240,200,80,.03) 48%,rgba(240,200,80,.03) 52%,transparent 52%);pointer-events:none}
+.hero-inner{padding:0 60px;max-width:900px;z-index:1}
+.hero-tag{font-family:'Orbitron',monospace;font-size:10px;color:var(--y3);letter-spacing:6px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.hero-tag::before{content:'';width:30px;height:1px;background:var(--y3)}
+.hero-title{font-family:'Orbitron',monospace;font-weight:900;font-size:clamp(32px,6vw,64px);color:var(--w);line-height:1.1;letter-spacing:2px}
+.hero-title span{color:var(--y);display:block;font-size:clamp(20px,3vw,36px);margin-top:4px}
+.hero-zh{font-family:'Noto Sans SC',sans-serif;font-weight:900;font-size:clamp(16px,2.5vw,24px);color:var(--w2);margin-top:12px;letter-spacing:6px}
+.hero-line{width:80px;height:3px;background:var(--y);margin:28px 0}
+.hero-quote{font-size:13px;color:var(--w3);line-height:2;max-width:560px}
+.hero-quote em{color:var(--y3);font-style:normal}
+.hero-corner{position:absolute;width:40px;height:40px;border-color:var(--y);border-style:solid}
+.hero-corner.tl{top:40px;left:40px;border-width:2px 0 0 2px}
+.hero-corner.tr{top:40px;right:40px;border-width:2px 2px 0 0}
+.hero-corner.bl{bottom:40px;left:40px;border-width:0 0 2px 2px}
+.hero-corner.br{bottom:40px;right:40px;border-width:0 2px 2px 0}
+.hero-scroll{position:absolute;bottom:50px;left:50%;transform:translateX(-50%);font-family:'Orbitron',monospace;font-size:9px;color:var(--y3);letter-spacing:4px;animation:hFloat 2.5s ease-in-out infinite}
+@keyframes hFloat{0%,100%{transform:translateX(-50%) translateY(0)}50%{transform:translateX(-50%) translateY(-8px)}}
 
-        @keyframes drift {
-            from { transform: translate(-25%, -25%) rotate(0deg); }
-            to { transform: translate(-20%, -20%) rotate(1deg); }
-        }
+/* === SECTION === */
+section{padding:80px 24px;position:relative}
+.sec-head{display:flex;align-items:center;gap:16px;margin-bottom:48px;padding-bottom:16px;border-bottom:1px solid var(--bk4)}
+.sec-head .idx{font-family:'Orbitron',monospace;font-size:36px;font-weight:900;color:var(--y);line-height:1}
+.sec-head .lbl{display:flex;flex-direction:column}
+.sec-head .lbl h2{font-family:'Rajdhani',sans-serif;font-weight:700;font-size:20px;letter-spacing:4px;text-transform:uppercase;color:var(--w)}
+.sec-head .lbl p{font-size:11px;color:var(--w3);letter-spacing:2px;margin-top:2px}
+.sec-head::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--bk4),transparent)}
 
-        /* 顶部扫描状态 */
-        nav {
-            padding: 20px;
-            border-bottom: 1px solid var(--dim);
-            display: flex;
-            justify-content: space-between;
-            background: rgba(10,10,10,0.8);
-            backdrop-filter: blur(10px);
-            z-index: 100;
-        }
+/* === ORG CARDS === */
+.org-wrap{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+.ocard{background:var(--bk2);border:1px solid var(--bk4);position:relative;padding:20px 24px;cursor:pointer;transition:all .25s;clip-path:polygon(0 0,calc(100% - 16px) 0,100% 16px,100% 100%,0 100%)}
+.ocard::before{content:'';position:absolute;top:0;right:0;width:16px;height:16px;border-bottom:1px solid var(--bk4);border-left:1px solid var(--bk4);background:var(--bk);clip-path:polygon(100% 0,0 100%,100% 100%);transition:border-color .25s}
+.ocard:hover{border-color:var(--y3);background:var(--bk3)}
+.ocard:hover::before{border-color:var(--y3)}
+.ocard .tier{font-family:'Orbitron',monospace;font-size:9px;color:var(--y3);letter-spacing:3px;text-transform:uppercase}
+.ocard h3{font-family:'Noto Sans SC',sans-serif;font-weight:700;font-size:14px;color:var(--w);margin:6px 0 2px;line-height:1.5}
+.ocard .en{font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--w3);line-height:1.4}
+.ocard .meta{margin-top:12px;font-size:11px;color:var(--w3);line-height:1.7}
+.ocard .meta b{color:var(--y3);font-weight:600}
 
-        .status-tag { color: var(--accent); font-weight: bold; }
-        .status-tag::before { content: "●"; margin-right: 8px; animation: blink 1s infinite; }
+/* === MEMBERS === */
+.dept-wrap{max-width:1200px;margin:0 auto}
+.dept-blk{margin-bottom:64px}
+.dept-hdr{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+.dept-hdr::before{content:'';width:4px;height:24px;background:var(--y)}
+.dept-hdr h3{font-family:'Rajdhani','Noto Sans SC',sans-serif;font-weight:700;font-size:16px;letter-spacing:2px;color:var(--w)}
+.dept-intro{font-size:12px;color:var(--w3);line-height:1.9;margin-bottom:24px;padding-left:16px;border-left:1px solid var(--bk4);max-width:800px}
+.mem-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(360px,1fr));gap:16px}
 
-        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+.mcard{background:var(--bk2);border:1px solid var(--bk4);overflow:hidden;cursor:pointer;transition:all .3s;position:relative}
+.mcard:hover{border-color:var(--y3)}
+.mcard-top{padding:16px 20px;display:flex;justify-content:space-between;align-items:flex-start;border-bottom:1px solid var(--bk4);transition:background .3s}
+.mcard:hover .mcard-top{background:rgba(240,200,80,.03)}
+.mcard-top h4{font-family:'Noto Sans SC',sans-serif;font-weight:700;font-size:15px;color:var(--w)}
+.mcard-top .enname{font-family:'Rajdhani',sans-serif;font-size:11px;color:var(--w3);margin-top:1px}
+.mcard-top .arrow{color:var(--y3);font-size:16px;transition:transform .3s;font-family:monospace}
+.mcard.open .mcard-top .arrow{transform:rotate(180deg)}
+.mcard-stats{padding:12px 20px;display:grid;grid-template-columns:1fr 1fr;gap:4px 16px;font-size:11px}
+.mcard-stats .st{color:var(--w3);line-height:1.7}
+.mcard-stats .st b{color:var(--w2);font-weight:500}
+.gem-bar{display:flex;align-items:center;gap:8px;padding:8px 20px;background:rgba(240,200,80,.04);border-top:1px solid var(--bk4);font-size:11px}
+.gem-bar .diamond{color:var(--y);font-size:13px}
+.gem-bar .gname{color:var(--y3);letter-spacing:1px}
+.gem-bar .mohs{margin-left:auto;font-family:'Orbitron',monospace;font-size:10px;color:var(--w3)}
+.mcard-detail{display:none;padding:16px 20px;border-top:1px solid var(--bk4);font-size:12px;line-height:2;color:var(--w3);background:rgba(0,0,0,.2)}
+.mcard.open .mcard-detail{display:block;animation:mSlide .3s ease}
+@keyframes mSlide{from{opacity:0;max-height:0}to{opacity:1}}
+.mcard-detail .bio-sec{margin-bottom:10px}
+.mcard-detail .bio-sec:last-child{margin-bottom:0}
+.mcard-detail .bio-label{font-family:'Orbitron',monospace;font-size:9px;color:var(--y3);letter-spacing:3px;margin-bottom:4px;display:flex;align-items:center;gap:6px}
+.mcard-detail .bio-label::before{content:'';width:8px;height:1px;background:var(--y3)}
+.mcard-detail .bio-text{padding-left:14px;border-left:2px solid var(--bk4)}
+.mcard-detail .fate-text{padding-left:14px;border-left:2px solid var(--r2);color:var(--r)}
+.mcard-detail .quote-text{padding:10px 14px;background:rgba(240,200,80,.04);border-left:2px solid var(--y3);color:var(--y3);font-style:italic;margin-top:8px}
+.mcard-detail .spec-text{padding-left:14px;border-left:2px solid #2a5a3a;color:#70b080}
+.mcard-detail .noaccess{padding:20px;text-align:center;color:var(--w3);font-size:12px;letter-spacing:2px;background:repeating-linear-gradient(45deg,transparent,transparent 10px,rgba(240,200,80,.02) 10px,rgba(240,200,80,.02) 20px)}
+.expand-bar{padding:6px 20px 10px;font-family:'Orbitron',monospace;font-size:9px;color:var(--y3);letter-spacing:2px;text-align:right}
 
-        /* 主画布：坐标映射区 */
-        main {
-            flex: 1;
-            position: relative;
-            overflow: hidden;
-        }
+/* === LORE === */
+.lore-wrap{max-width:860px;margin:0 auto}
+.lcard{background:var(--bk2);border:1px solid var(--bk4);margin-bottom:16px;overflow:hidden;clip-path:polygon(0 0,calc(100% - 20px) 0,100% 20px,100% 100%,20px 100%,0 calc(100% - 20px))}
+.lcard-hdr{padding:16px 24px;background:rgba(240,200,80,.04);border-bottom:1px solid var(--bk4);display:flex;align-items:center;gap:10px}
+.lcard-hdr::before{content:'';width:6px;height:6px;background:var(--y);transform:rotate(45deg)}
+.lcard-hdr h3{font-family:'Rajdhani','Noto Sans SC',sans-serif;font-weight:700;font-size:15px;letter-spacing:2px;color:var(--y)}
+.lcard-body{padding:20px 24px;font-size:12.5px;line-height:2.1;color:var(--w3)}
 
-        /* 坐标点样式 */
-        .node {
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: var(--fg);
-            transform: translate(-50%, -50%);
-            transition: all 0.3s ease;
-        }
+/* === FOOTER === */
+footer{border-top:1px solid var(--bk4);padding:40px 24px;text-align:center}
+footer .f-logo{font-family:'Orbitron',monospace;font-size:11px;color:var(--y3);letter-spacing:6px;margin-bottom:8px}
+footer .f-sub{font-size:10px;color:var(--w3);letter-spacing:2px;line-height:2}
+footer .f-quote{margin-top:16px;color:var(--y3);font-size:12px;font-style:italic}
 
-        .node::before {
-            content: "";
-            position: absolute;
-            top: 50%; left: 50%;
-            width: 30px; height: 30px;
-            border: 1px solid var(--dim);
-            transform: translate(-50%, -50%);
-            transition: 0.3s;
-        }
+/* === MOBILE === */
+@media(max-width:768px){
+  .hero-inner{padding:0 24px}
+  .nav-tabs{gap:0}
+  .nav-tab{padding:14px 12px;font-size:10px;letter-spacing:1px}
+  .nav-r{display:none}
+  .org-wrap,.mem-grid{grid-template-columns:1fr}
+  .hero-corner{display:none}
+  section{padding:60px 16px}
+}
 
-        .node:hover { background: var(--accent); scale: 1.5; }
-        .node:hover::before { border-color: var(--accent); width: 45px; height: 45px; }
-
-        .node-label {
-            position: absolute;
-            left: 20px;
-            top: -10px;
-            white-space: nowrap;
-            font-size: 10px;
-            letter-spacing: 2px;
-            opacity: 0.4;
-            transition: 0.3s;
-        }
-
-        .node:hover .node-label { opacity: 1; color: var(--accent); }
-
-        /* 详情侧边栏 */
-        #detail-pane {
-            position: fixed;
-            right: -400px;
-            top: 0;
-            width: 400px;
-            height: 100vh;
-            background: rgba(255,255,255,0.02);
-            border-left: 1px solid var(--dim);
-            backdrop-filter: blur(20px);
-            padding: 80px 40px;
-            transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1);
-            z-index: 200;
-        }
-
-        #detail-pane.active { right: 0; }
-
-        .detail-header { border-bottom: 2px solid var(--fg); padding-bottom: 10px; margin-bottom: 30px; }
-        .detail-title { font-size: 24px; text-transform: uppercase; }
-        .detail-coord { font-size: 10px; color: var(--dim); margin-top: 5px; }
-        .detail-body { font-size: 14px; line-height: 1.8; color: #ccc; }
-
-        /* UI 装饰：十字准心 */
-        .crosshair-v { position: fixed; left: 50%; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.05); pointer-events: none; }
-        .crosshair-h { position: fixed; left: 0; top: 50%; width: 100%; height: 1px; background: rgba(255,255,255,0.05); pointer-events: none; }
-
-        .terminal-output {
-            position: fixed;
-            bottom: 20px;
-            left: 20px;
-            font-size: 9px;
-            color: var(--dim);
-            max-width: 300px;
-            pointer-events: none;
-        }
-    </style>
+/* reveal */
+.rv{opacity:0;transform:translateY(20px);transition:all .6s cubic-bezier(.25,.46,.45,.94)}
+.rv.vis{opacity:1;transform:translateY(0)}
+</style>
 </head>
 <body>
+<div class="scanlines"></div>
+<div id="loader"><div class="ld-box"></div><div class="ld-text">DECRYPTING</div></div>
 
-    <div class="void-grid"></div>
-    <div class="crosshair-v"></div>
-    <div class="crosshair-h"></div>
+<nav id="nav">
+  <div class="nav-brand" onclick="sTo('#hero')"><span class="sq"></span>R.I.R</div>
+  <div class="nav-tabs">
+    <div class="nav-tab" data-s="org" onclick="sTo('#org')">ORGANIZATIONS</div>
+    <div class="nav-tab" data-s="members" onclick="sTo('#members')">PERSONNEL</div>
+    <div class="nav-tab" data-s="lore" onclick="sTo('#lore')">CLASSIFIED</div>
+  </div>
+  <div class="nav-r">ARCHIVE SYSTEM v3.14</div>
+</nav>
 
-    <nav>
-        <div>ROSETTA IMPERIAL INSTITUTE // ARCHIVE_v4.0</div>
-        <div class="status-tag">WANDERING_SOUL_DETECTED</div>
-    </nav>
+<section id="hero">
+  <div class="hero-grid"></div>
+  <div class="hero-diag"></div>
+  <div class="hero-corner tl"></div><div class="hero-corner tr"></div>
+  <div class="hero-corner bl"></div><div class="hero-corner br"></div>
+  <div class="hero-inner">
+    <div class="hero-tag">CLASSIFIED ARCHIVE</div>
+    <h1 class="hero-title">IMPERIAL INSTITUTE<span>OF ROSETTA</span></h1>
+    <div class="hero-zh">罗塞塔帝国研究所</div>
+    <div class="hero-line"></div>
+    <p class="hero-quote">以自然神的指示，为伟大的罗塞塔帝国研究所的消亡默哀。<br><em>—— 洛芙尔&middot;梅蕾迪思，于十三月</em></p>
+  </div>
+  <div class="hero-scroll">&#9660; SCROLL TO ACCESS &#9660;</div>
+</section>
 
-    <main id="map-area">
-        </main>
+<section id="org">
+  <div class="sec-head rv"><div class="idx">01</div><div class="lbl"><h2>Organizations</h2><p>机 构 总 览</p></div></div>
+  <div class="org-wrap" id="orgGrid"></div>
+</section>
 
-    <div id="detail-pane">
-        <div class="detail-header">
-            <div class="detail-title" id="p-title">SELECT NODE</div>
-            <div class="detail-coord" id="p-coord">COORD: 000.00 / 000.00</div>
-        </div>
-        <div class="detail-body" id="p-desc">
-            点击虚空中的坐标点以提取罗塞塔档案数据包。
-        </div>
-    </div>
+<section id="members">
+  <div class="sec-head rv"><div class="idx">02</div><div class="lbl"><h2>Personnel Files</h2><p>研 究 员 档 案</p></div></div>
+  <div class="dept-wrap" id="deptWrap"></div>
+</section>
 
-    <div class="terminal-output" id="terminal">
-        [INIT] SYSTEM BOOT...<br>
-        [OK] GRID SYNCED.<br>
-        [OK] MAPPING VOID COORDINATES...
-    </div>
+<section id="lore">
+  <div class="sec-head rv"><div class="idx">03</div><div class="lbl"><h2>Classified</h2><p>密 典 与 遗 产</p></div></div>
+  <div class="lore-wrap" id="loreWrap"></div>
+</section>
 
-    <script>
-        const data = [
-            { name: "星空计数人委员会", id: "SCC", x: 20, y: 30, desc: "罗塞塔帝国研究所的核心大脑。统筹狄俄尼修斯计划与星空计数事务。" },
-            { name: "薇薇安学院", id: "VIV", x: 75, y: 25, desc: "重元素与理论物理研究院。提供了模拟粒子对撞机方案。" },
-            { name: "蜜獾突击队", id: "HBC", x: 40, y: 80, desc: "有神力者特别观测站。负责间谍潜伏与暗杀任务。" },
-            { name: "应用数学研究院", id: "MAT", x: 15, y: 65, desc: "负责构建罗塞塔帝国研究所的数学基石与逻辑模型。" },
-            { name: "理化学研究院", id: "RIKEN", x: 85, y: 70, desc: "跨学科研究的前沿阵地，融合物理与化学的奇迹。" },
-            { name: "玛德琳研究院", icon: "🍰", x: 60, y: 55, desc: "附属下午茶艺术研究院。活着是为了什么？为了玛德琳小蛋糕。" }
-        ];
+<footer>
+  <div class="f-logo">&#9670; IMPERIAL INSTITUTE OF ROSETTA &#9670;</div>
+  <div class="f-sub">STARRY COUNTERS COMMITTEE &bull; ARCHIVE TERMINAL</div>
+  <div class="f-quote">&ldquo;希望大家都被幸福和甜蜜包围着呢！&rdquo;</div>
+</footer>
 
-        const mapArea = document.getElementById('map-area');
-        const pane = document.getElementById('detail-pane');
-        const term = document.getElementById('terminal');
+<script>
+var orgs=[
+{t:"一级机构",n:"星空计数人委员会 (SCC)",e:"The Starry Counters Committee, Imperial Institute of Rosetta",hd:"责任会长：伊丽莎白\u00b7玛吉",lo:"\u54c8\u5229\u6cd5\u5854\uff0c\u8fea\u62dc\uff0c\u6c99\u7279\u963f\u62c9\u4f2f"},
+{t:"一级机构",n:"狄俄尼修斯计划事务处",e:"Offices of Services of the Dionysus Project, Imperial Institute of Rosetta",hd:"事务处处长：伊丽莎白\u00b7玛吉",lo:"格陵兰岛，丹麦"},
+{t:"二级机构",n:"重元素与理论物理研究院（薇薇安学院）",e:"Institute of Heavy Elements and Theoretical Physics (Vivian College)",hd:"研究院院长：薇薇安\u00b7莉丝\u00b7迈特纳",lo:"莱比锡，德国"},
+{t:"二级机构",n:"有神力者特别观测站与秘密事务执行处（蜜獾突击队）",e:"Clandestine Service and Ad hoc Observatory of the Divines (Honey Badger Commando)",hd:"首席执行官：爱丽丝\u00b7维多利亚",lo:"伦敦，英国"},
+{t:"二级机构",n:"应用数学研究院",e:"Institute of Applied Mathematics",hd:"研究院院长：洛厄里\u00b7奈希勒提",lo:"那不勒斯，意大利"},
+{t:"二级机构",n:"应用物理研究院",e:"Institute of Applied Physics",hd:"研究院院长：希帕媞娅",lo:"都柏林，爱尔兰"},
+{t:"二级机构",n:"理化学研究院",e:"Riken, Imperial Institute of Rosetta",hd:"研究院院长：塔贝蒂\u00b7贝拉特\u00b7埃卡里",lo:"巴黎，法国"},
+{t:"二级机构",n:"政府间友好关系协商与国际威慑委员会 (ICC)",e:"Intergovernmental Consultative Committee on Friendly Relations and International Deterrence",hd:"责任委员长：亚历山大\u00b7布鲁托\u00b7里特尔（埃拉托色尼）",lo:"时代广场，纽约，美国"},
+{t:"二级机构",n:"综合数据处理与经济预算中心",e:"Centre for Integrated Data Processing, Economic Budget and External Expenditure",hd:"中心组组长：爱德华\u00b7德\u00b7帕米安（艾伦\u00b7麦席森\u00b7图灵）",lo:"费城，宾夕法尼亚州，美国"},
+{t:"二级机构",n:"适应性综合武装作战部队总司令处（浣熊俱乐部）",e:"Commander-in-Chief Adaptive Integrated Armed Combat Forces (Raccoon Club)",hd:"司令部部长兼海岸巡警总长官：费尔迪南\u00b7德\u00b7索绪尔",lo:"丘吉尔镇，马尼托巴省，加拿大"},
+{t:"二级机构",n:"特殊文献资料存放处（莫里哀图书馆）",e:"Repository of Special Documents (the Library of Moli\u00e8re)",hd:"莫里哀图书馆馆长：阿尔伯特\u00b7西奥多\u00b7吉奥索",lo:"凡尔赛，法国"},
+{t:"二级机构",n:"爱德文\u00b7哈勃\u00b7开普勒天文台",e:"Edwin Hubble-Kepler Observatory",hd:"天文台长官：希帕克斯",lo:"巴拿马城，巴拿马"},
+{t:"二级机构",n:"语言、符号与密码学研究院",e:"Institute of Language and Cryptography",hd:"常务院长：费尔迪南\u00b7德\u00b7索绪尔 / 应急院长：摩尔斯\u00b7费加罗\u00b7马蒂斯",lo:"日内瓦，瑞士"},
+{t:"三级机构",n:"下午茶艺术玛德琳研究院",e:"The Sweetest Madeleine Institute of Afternoon Tea Objet d\u2019Art",hd:"研究院院长：阿卡迪娅\u00b7可颂\u00b7玛德琳",lo:"里昂，法国"}
+];
 
-        // 生成节点
-        data.forEach(item => {
-            const node = document.createElement('div');
-            node.className = 'node';
-            node.style.left = item.x + '%';
-            node.style.top = item.y + '%';
-            
-            node.innerHTML = `<div class="node-label">${item.id || 'NODE'} // ${item.name}</div>`;
-            
-            node.onclick = (e) => {
-                e.stopPropagation();
-                document.getElementById('p-title').innerText = item.name;
-                document.getElementById('p-coord').innerText = `COORD: ${item.x}.00 / ${item.y}.00 [STABLE]`;
-                document.getElementById('p-desc').innerHTML = item.desc;
-                pane.classList.add('active');
-                addLog(`[ACCESS] ${item.name} 数据解密成功。`);
-            };
+var depts=[
+{name:"下午茶艺术玛德琳研究院",
+desc:"玛德琳研究院直属于星空计数人委员会，但职权只相当于一个三级机构。即便如此，它还是研究所内影响力几乎最大的下属机构。一般来说三级机构的研究院院长地位仅略高于二级机构的普通研究员，但敬爱的阿莉奥斯托\u00b7可颂\u00b7玛德琳女士绝不属于此列。玛德琳女士作为凡尔赛宫廷糕点师的十三代传人，是世界上玛德琳小蛋糕制作水平最高超的糕点师。她会根据各个研究员的性格和特色来量身定做小蛋糕，让每一位研究员感受到最大的愉悦和满足。除了研究院院长外，三级机构的研究员没有一级代号。不过仔细想想，他们真的需要吗？\n（画外音：柠檬塔姐姐！帮帮我！）",
+members:[
+{name:"\u963f\u8389\u5965\u65af\u6258\u00b7\u53ef\u9882\u00b7\u739b\u5fb7\u7433",en:"Arcadia Croissant Madeleine",born:"1882\u5e742\u670814\u65e5",eye:"\u4f18\u96c5\u7684\u9752\u8272",hair:"\u5496\u5561\u8272\u548c\u91d1\u8272",ht:"172cm",dress:"\u7d2b\u8272\u857e\u4e1d\u8fb9\u8fde\u8863\u88d9 \u9ed1\u4e1d \u7d2b\u8272\u6c34\u6676\u978b",
+gem:"\u72ec\u5c45\u77f3",geme:"Monazite",mohs:"5.25",
+gemDesc:"\u3010\u72ec\u5c45\u77f3\u3011\uff08Monazite\uff09\n\u83ab\u6c0f\u786c\u5ea6 5~5.5 \u6bd4\u91cd 4.9~5.5\n\u68d5\u7ea2\u8272\uff0c\u9ec4\u8272\uff0c\u6709\u65f6\u5448\u8910\u9ec4\u8272\uff0c\u6cb9\u8102\u5149\u6cfd\u3002\u72ec\u5c45\u77f3\u662f\u4e00\u79cd\u4e2d\u9178\u6027\u5ca9\u6d46\u5ca9\u548c\u53d8\u8d28\u5ca9\u4e2d\u8f83\u5e38\u89c1\u7684\u526f\u77ff\u7269\uff0c\u5728\u4e00\u4e9b\u6c89\u79ef\u5ca9\u4e2d\u4e5f\u5b58\u5728\u3002\u4e0d\u8bba\u5ca9\u6d46\u6210\u56e0\u6216\u53d8\u8d28\u6210\u56e0\u72ec\u5c45\u77f3\uff0c\u5176\u540c\u4f4d\u7d20\u5e74\u9f84\u7684\u5730\u8d28\u610f\u4e49\u90fd\u8f83\u4e3a\u6e05\u695a\u3002\u72ec\u5c45\u77f3\u4e3a\u5355\u659c\u6676\u7cfb\uff0c\u6676\u4f53\u4e3a\u677f\u72b6\u6216\u67f1\u72b6\u3002\n\u72ec\u5c45\u77f3\u5305\u542b\u6709\u51e0\u4e4e\u6240\u6709\u7684\u7a00\u571f\u5143\u7d20\u3002",
+intro:"\u7b80\u4ecb\uff1a\u6d3b\u7740\u662f\u4e3a\u4e86\u4ec0\u4e48\uff1f\u6d3b\u7740\u5c31\u662f\u4e3a\u4e86\u739b\u5fb7\u7433\u5c0f\u86cb\u7cd5\uff0c\u7279\u522b\u662f\u4e3a\u4e86\u963f\u8389\u5965\u65af\u6258\u7684\u739b\u5fb7\u7433\u5c0f\u86cb\u7cd5\u3002\n\u5728\u90a3\u4e2a\u5e74\u4ee3\uff0c\u7cd5\u70b9\u5e08\u7684\u6700\u9ad8\u8363\u8a89\u5c31\u662f\u8fdb\u5165\u5bab\u5ef7\u505a\u6559\u7687\u5723\u5178\u7684\u7cd5\u70b9\u3002\u4f5c\u4e3a\u5bab\u5ef7\u5fa1\u53a8\u7b2c\u5341\u4e09\u4ee3\u4f20\u4eba\uff0c\u739b\u5fb7\u7433\u7684\u6280\u827a\u6bfb\u5eb8\u7f6e\u7591\uff0c\u4f46\u5979\u7684\u70f9\u996a\u4e60\u60ef\u5374\u846c\u9001\u4e86\u5979\u7684\u524d\u9014\u3002\u5979\u4e60\u60ef\u6027\u5730\u89c2\u5bdf\u98df\u5ba2\u7684\u6027\u683c\u548c\u559c\u597d\u6765\u786e\u5b9a\u5c0f\u86cb\u7cd5\u7684\u5473\u9053\uff0c\u5728\u7ed9\u6559\u7687\u8fdb\u5949\u5c0f\u86cb\u7cd5\u65f6\uff0c\u5979\u5728\u91cc\u9762\u6dfb\u52a0\u4e86\u9e1f\u7caa\uff01\u636e\u5979\u4e8b\u540e\u56de\u5fc6\uff1a",
+quote:"\u201c\u6211\u90a3\u4e2a\u65f6\u5019\u4e5f\u5c31\u662f\u7075\u5149\u4e00\u95ea\uff0c\u6211\u600e\u4e48\u77e5\u9053\u4ed6\u53cd\u5e94\u8fd9\u4e48\u5927\uff0c\u90a3\u73a9\u610f\u662f\u7528\u6765\u589e\u5473\u7684\uff0c\u53c8\u4e0d\u662f\u7528\u6765\u5403\u7684\uff0c\u4ed6\u81ea\u5df1\u5f53\u5976\u6cb9\u5403\u4e86\u8ddf\u6211\u6709\u4ec0\u4e48\u5173\u7cfb\u963f\u3002\u201d",
+bio2:"\u968f\u540e\uff0c\u739b\u5fb7\u7433\u5973\u58eb\u88ab\u8f9e\u9000\uff0c\u5e76\u88ab\u6c38\u4e45\u9a71\u9010\uff0c\u7981\u6b62\u518d\u5165\u6559\u7687\u56fd\u548c\u90a3\u4e0d\u52d2\u65af\u738b\u56fd\u56fd\u5883\u3002\u739b\u5fb7\u7433\u5973\u58eb\u5728\u6cd5\u56fd\u5f00\u4e86\u5bb6\u7cd5\u70b9\u5e97\u505a\u5c0f\u672c\u751f\u610f\uff0c\u867d\u8bf4\u8d5a\u4e86\u70b9\u5c0f\u94b1\uff0c\u4f46\u603b\u5f52\u662f\u4e0d\u590d\u5f53\u5e74\u4e4b\u52c7\u3002\u7ec8\u4e8e\uff0c\u5979\u5728\u4e8c\u5341\u5c81\u90a3\u5e74\u6765\u5230\u4e86\u4e00\u5bb6\u8c8c\u4f3c\u662f\u7687\u5ba4\u673a\u6784\u7684\u5730\u65b9\u5e94\u8058\uff0c\u4ece\u6b64\u4e00\u4e0d\u5c0f\u5fc3\u8bef\u5165\u4e86\u7f57\u585e\u5854\u5e1d\u56fd\u7814\u7a76\u6240\u3002\n\u739b\u5fb7\u7433\u5973\u58eb\u6027\u683c\u968f\u548c\uff0c\u4f60\u53ef\u4ee5\u53eb\u5979\u739b\u5fb7\u7433\uff0c\u4e5f\u53ef\u4ee5\u53eb\u5979\u963f\u8389\u5965\u65af\u6258\uff0c\u4e5f\u53ef\u4ee5\u53eb\u5979\u53ef\u9882\uff0c\u4e5f\u53ef\u4ee5\u53eb\u5979\u963f\u8389\u3002\u636e\u8bf4\uff0c\u5982\u679c\u4f60\u7684\u5e74\u9f84\u6bd4\u5979\u5c0f\uff0c\u4e14\u4eb2\u5207\u5730\u79f0\u547c\u5979\u4e3a\u53ef\u9882\u59d0\u59d0\uff0c\u5979\u4f1a\u55b7\u51fa\u5927\u91cf\u84b8\u6c7d\u7136\u540e\u7ed9\u4f60\u505a\u4e00\u4efd\u739b\u5fb7\u7433\u5c0f\u86cb\u7cd5\u5e76\u70ed\u60c5\u5730\u62e5\u62b1\u4f60\u3002\u739b\u5fb7\u7433\u7814\u7a76\u9662\u4e00\u76f4\u90fd\u5f88\u751c\u871c\uff0c\u662f\u5927\u5bb6\u90fd\u80fd\u611f\u53d7\u5230\u6e29\u6696\u7684\u5730\u65b9\u3002\u5728\u7b2c\u4e00\u6b21\u5149\u5893\u6218\u4e89\u4e2d\uff0c\u6240\u6709\u7684\u7814\u7a76\u5458\u51e0\u4e4e\u90fd\u62fc\u6b7b\u62a2\u6551\u739b\u5fb7\u7433\u7814\u7a76\u9662\u3002\u739b\u5fb7\u7433\u9662\u5728\u6b64\u6b21\u6218\u4e89\u4e2d\u65e0\u4eba\u4f24\u4ea1\u3002\u5c3d\u7ba1\u5982\u6b64\uff0c\u5f53\u518d\u4e5f\u505a\u4e0d\u51fa\u67d0\u4e9b\u53e3\u5473\u7684\u739b\u5fb7\u7433\u5c0f\u86cb\u7cd5\u7684\u65f6\u5019\uff0c\u739b\u5fb7\u7433\u5973\u58eb\u8fd8\u662f\u4f1a\u611f\u5230\u83ab\u540d\u7684\u5fe7\u90c1\u3002\u5979\u53f7\u53ec\u739b\u5fb7\u7433\u9662\u548c\u7426\u5361\u9662\u7684\u7cd5\u70b9\u5e08\u548c\u88c5\u6f62\u5e08\u4eec\u8981\u7528\u81ea\u5df1\u7684\u65b9\u5f0f\u4fdd\u62a4\u597d\u81ea\u5df1\uff0c\u5982\u679c\u53ef\u80fd\uff0c\u6700\u597d\u518d\u4f9d\u9760\u81ea\u5df1\u7684\u529b\u91cf\u53bb\u5b88\u62a4\u522b\u4eba\u3002\u5979\u63d0\u51fa\u4e86\u521b\u9020\u739b\u5fb7\u7433\u9632\u8eab\u672f\u7684\u6784\u60f3\u5e76\u793a\u8303\u7f16\u51fa\u4e86\u7b2c\u4e00\u5f0f\u201c\u739b\u5fb7\u7433\u8f70\u70b8\u201d\u3002\n\u8fd9\u4e2a\u4e16\u754c\u771f\u662f\u592a\u7f8e\u597d\u4e86\u3002\u56e0\u4e3a\u90a3\u4e9b\u751c\u871c\u7684\u4e1c\u897f\u4e0d\u4ec5\u503c\u5f97\u6211\u4eec\u4fdd\u62a4\uff0c\u90a3\u4e9b\u6211\u4eec\u4fdd\u62a4\u7684\u4e1c\u897f\u8fd8\u53ef\u4ee5\u4fdd\u62a4\u6211\u4eec\u3002",
+lastquote:"\u201c\u5e0c\u671b\u5927\u5bb6\u90fd\u88ab\u5e78\u798f\u548c\u751c\u871c\u5305\u56f4\u7740\u5462\uff01\u201d\u8fd9\u5c31\u662f\u739b\u5fb7\u7433\u5973\u58eb\u7ed9\u6211\u4eec\u7559\u4e0b\u7684\u6700\u540e\u4e00\u53e5\u8bdd\u3002",
+fate:"\u5728\u7b2c\u4e8c\u6b21\u5149\u5893\u6218\u4e89\u4e2d\uff0c\u739b\u5fb7\u7433\u7814\u7a76\u9662\u906d\u9047\u4e86\u96ea\u96c1\u7684\u88ad\u51fb\u3002\u739b\u5fb7\u7433\u5973\u58eb\u5047\u610f\u8fdb\u5949\u86cb\u7cd5\uff0c\u5728\u5bf9\u65b9\u88ab\u9ebb\u75f9\u4e4b\u65f6\u5f15\u7206\u4e86\u86cb\u7cd5\u91cc\u7684\u70b8\u5f39\uff0c\u88ab\u9ed1\u706b\u7130\u53cd\u566c\u800c\u6b7b\u3002"},
 
-            mapArea.appendChild(node);
-        });
+{name:"\u5e0c\u7279\u4e1d\u00b7\u67e0\u6aac\u5854",en:"Citrus Lemonade",noAccess:true},
+{name:"\u535a\u683c\u7c73\u5a05\u00b7\u67e0\u6aac\u5854",en:"Bergamia Lemonade",noAccess:true},
+{name:"\u5362\u745f\u798f\u00b7\u8499\u54e5\u9a6c\u5229\u00b7\u8d1d\u683c\u7279",en:"Rutherford Montgomery Baguette",noAccess:true},
 
-        // 点击空白处关闭
-        document.body.onclick = () => {
-            pane.classList.remove('active');
-            addLog(`[IDLE] 等待指令...`);
-        }
+{name:"\u5fb7\u62c9\u00b7\u7f57\u6bd4\u5a05\u00b7\u6d1b\u53ef\u53ef",en:"Della Robia Rococo",born:"1900\u5e741\u670899\u65e5",eye:"\u62b9\u8336\u8272",hair:"\u6d1b\u53ef\u53ef\u8272",ht:"164cm",
+gem:null,geme:null,mohs:null,
+gemDesc:"\u4e00\u7ea7\u4ee3\u53f7\uff1a\u3010\u539f\u4e09\u7ea7\u673a\u6784\u6210\u5458\u65e0\u4e00\u7ea7\u4ee3\u53f7\u3011",
+intro:"\u7b80\u4ecb\uff1a\u8eab\u6750\u4e30\u8174\u7684\u5927\u59d0\u59d0\uff0c\u4f46\u5176\u5b9e\u5e74\u9f84\u5e76\u4e0d\u5927\u3002\u67e0\u6aac\u5854\u59d0\u59b9\u7684\u5e08\u5085\uff0c\u201c\u9ed1\u68ee\u6797\u86cb\u7cd5\u201d\u4e00\u7b49\u5956\u548c\u6700\u901f\u901a\u5173\u4f20\u8bf4\u7684\u83b7\u5f97\u8005\u3002\u5168\u80fd\u578b\u7684\u6a21\u8303\u7814\u7a76\u5458\u3002\n\u4ece\u739b\u5fb7\u7433\u7814\u7a76\u9662\u8c03\u6765\u7684\u7cd6\u679c\u5236\u4f5c\u5e08\uff0c\u672c\u6765\u610f\u5728\u76d1\u7763\u963f\u5c14\u4f2f\u7279\u7ed9\u5916\u9662\u7684\u8bfb\u8005\u4e0a\u5496\u5561\u548c\u751c\u54c1\uff0c\u5728\u83ab\u91cc\u54c0\u56fe\u4e66\u9986\u8f6c\u578b\u4e4b\u540e\u7814\u5236\u51fa\u4e86\u4e00\u5957\u7528\u86cb\u7cd5\u548c\u751c\u54c1\u7cd6\u6d46\u8868\u793a\u7684\u6697\u53f7\u7cfb\u7edf\uff0c\u79f0\u4e3a\u201c\u6d1b\u53ef\u53ef\u6697\u53f7\u201d\u3002\u53e6\u5916\uff0c\u6d1b\u53ef\u53ef\u6697\u53f7\u4e5f\u88ab\u7528\u6765\u63a9\u9970\u96e8\u75d5\u5bc6\u7801\u7684\u75d5\u8ff9\u3002\n\u5fb7\u62c9\u72ec\u521b\u4e86\u739b\u5fb7\u7433\u9632\u8eab\u672f\u91cc\u7684\u201c\u9ed1\u68ee\u6797\u5251\u6cd5\u201d\u3002\u5728\u7b2c\u4e00\u6b21\u5149\u5893\u6218\u4e89\u91cc\uff0c\u5fb7\u62c9\u6307\u5f15\u739b\u5fb7\u7433\u7814\u7a76\u9662\u7684\u7814\u7a76\u5458\u758f\u6563\u5230\u83ab\u91cc\u54c0\u56fe\u4e66\u9986\uff0c\u7528\u5de7\u514b\u529b\u86cb\u7cd5\u548c\u5976\u6cb9\u9876\u4f4f\u4e86\u5bf9\u7406\u5316\u9662\u7684\u7b2c\u4e00\u6b21\u6b65\u5175\u88ad\u51fb\u3002"}
+]},
 
-        function addLog(msg) {
-            const line = document.createElement('div');
-            line.innerHTML = `> ${msg}`;
-            term.appendChild(line);
-            if (term.childNodes.length > 8) term.removeChild(term.firstChild);
-        }
+{name:"\u91cd\u5143\u7d20\u4e0e\u7406\u8bba\u7269\u7406\u7814\u7a76\u9662\uff08\u8587\u8587\u5b89\u5b66\u9662\uff09",
+desc:"\u8587\u8587\u5b89\u5b66\u9662\u662f\u7f57\u585e\u5854\u5e1d\u56fd\u7814\u7a76\u6240\u5386\u53f2\u6700\u60a0\u4e45\u7684\u4e8c\u7ea7\u673a\u6784\u3002\u59d4\u5458\u4f1a\u521b\u7acb\u4e4b\u521d\uff0c\u8587\u8587\u5b89\u5b66\u9662\u7531\u4f5c\u4e3a\u7f16\u5916\u4eba\u5458\u7684\u8587\u8587\u5b89\u00b7\u8389\u4e1d\u00b7\u8fc8\u7279\u7eb3\u4e3b\u6301\u521b\u5efa\uff0c\u5e76\u5728\u5f53\u65f6\u63d0\u4f9b\u4e86\u6a21\u62df\u7c92\u5b50\u5bf9\u649e\u673a\u7684\u4fee\u5efa\u65b9\u6848\uff0c\u8ba9\u7814\u7a76\u6240\u7684\u79d1\u7814\u80fd\u529b\u9996\u6b21\u771f\u6b63\u5f97\u5230\u4e86\u5b66\u672f\u754c\u7684\u5e7f\u6cdb\u8ba4\u53ef\u4e0e\u63a8\u5d07\uff0c\u5373\u4f7f\u5e76\u672a\u62e5\u6709\u6d41\u6d6a\u5fc3\u7075\uff0c\u8587\u8587\u5b89\u4ecd\u7136\u662f\u7814\u7a76\u6240\u91cc\u6700\u53d7\u4eba\u5c0a\u656c\u7684\u7814\u7a76\u9662\u957f\u4e4b\u4e00\u3002\n\u4e3a\u4e86\u7eaa\u5ff5\u4f1f\u5927\u7684\u539f\u5b50\u7269\u7406\u5b66\u5bb6\u8587\u8587\u5b89\u00b7\u8389\u4e1d\u00b7\u8fc8\u7279\u7eb3\uff0c\u5143\u7d20\u5468\u671f\u8868\u4e0a\u7684\u7b2c109\u53f7\u5143\u7d20\u4ee5\u5979\u7684\u540d\u5b57\u547d\u540d\u3002",
+members:[
+{name:"\u8587\u8587\u5b89\u00b7\u8389\u4e1d\u00b7\u8fc8\u7279\u7eb3",en:"Vivien Lise Meitner",born:"1888\u5e748\u67084\u65e5",eye:"\u68d5\u8272\uff0c\u767d\u8272\u77b3\u5b54",hair:"\u68d5\u8272\u5939\u5c11\u91cf\u91d1\u6bdb",ht:"168cm",dress:"\u68d5\u8272\u56f4\u5dfe\uff0c\u7ea2\u9a6c\u7532\u80cc\u5fc3\uff0c\u7ea2\u8272\u767d\u7ed2\u6bdb\u5927\u8863\uff0c\u5496\u5561\u8272\u5e95\u5361\u5176\u8272\u6761\u7eb9\u7684\u4f11\u95f2\u88e4",
+special:"\u7279\u6b8a\u8981\u7d20\uff1a\u6bd4\u5927\u62c7\u6307\u6307\u7532\u76d6\u957f\u7684\u773c\u776b\u6bdb",
+gem:"\u7ea2\u8272\u7ebf\u67f1\u77f3",geme:"Red Beryl",mohs:"7.5",
+gemDesc:"\u3010\u7ea2\u8272\u7ebf\u67f1\u77f3\u3011\uff08Red Beryl\uff09\n\u83ab\u6c0f\u786c\u5ea6\uff1a7.5 \u6bd4\u91cd\uff1a2.80 \u53cc\u6298\u5c04\uff1a\u6781\u8f7b\u5fae\n\u6781\u4e3a\u7f55\u89c1\uff0c\u8f83\u5c11\u7528\u4e8e\u7422\u78e8\u3002\u5177\u6709\u6d53\u70c8\u7684\u9c9c\u7ea2\u8272\uff0c\u7531\u5176\u4e2d\u7684\u9530\u5143\u7d20\u4ea7\u751f\u3002\n\u6613\u4e0e\u65b9\u94c1\u9530\u77f3\u6216\u7ea2\u67f1\u77f3\u6df7\u6dc6\u3002",
+intro:"",bio2:"",fate:""},
 
-        // 鼠标移动跟随
-        document.addEventListener('mousemove', (e) => {
-            const x = (e.clientX / window.innerWidth * 100).toFixed(2);
-            const y = (e.clientY / window.innerHeight * 100).toFixed(2);
-            // 这里可以添加实时坐标显示的逻辑
-        });
-
-    </script>
-</body>
-</html>
+{name:"\u5b63\u7231\u96e8",en:"Ji Aiyu",born:"1897\u5e746\u670829\u65e5",eye:"\u68d5\u8910\u8272",hair:"\u7070\u84dd\u8272",ht:"165cm",dress:"\u767d\u9886\u536b\u8863\uff0c\u51b7\u8272\u7cfb\u6bdb\u8863\uff0c\u5929\u84dd\u8272\u98ce\u8863\uff0c\u4e0d\u5e38\u7a7f\u88d9\u5b50",
+gem:"\u7ea2\u8272\u77f3\u69b4\u77f3",geme:"Pyrope-Garnet",mohs:"7.25",
+gemDesc:"\u3010\u7ea2\u8272\u77f3\u69b4\u77f3\u3011\uff08Pyrope-Garnet\uff09\n\u83ab\u6c0f\u786c\u5ea6\uff1a7.25 \u6bd4\u91cd\uff1a3.80 \u53cc\u6298\u5c04\uff1a\u65e0\n\u5206\u5e03\u5728\u51b2\u51fb\u5ca9\u548c\u706b\u5c71\u5ca9\u4e2d\uff0c\u53ef\u80fd\u4e0e\u5176\u4ed6\u77ff\u7269\u5171\u751f\uff0c\u8868\u660e\u9644\u8fd1\u53ef\u80fd\u6709\u94bb\u77f3\u7684\u51fa\u73b0\uff0c\u4f46\u672c\u8eab\u7a00\u6709\u5ea6\u4e0d\u9ad8\uff0c\u662f\u77f3\u69b4\u77f3\u65cf\u6df7\u6742\u94c1\u548c\u94ec\u5143\u7d20\u7684\u4ea7\u7269\u3002\n\u
