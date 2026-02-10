@@ -3,483 +3,229 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>罗塞塔帝国研究所 | Rosetta Archives</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@300;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
+    <title>ROSETTA | VOID-MAPPING</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&display=swap');
+
         :root {
-            --bg-color: #050608;
-            --card-bg: rgba(15, 20, 28, 0.85);
-            --gold: #d4af37;
-            --gold-dim: #8a702a;
-            --ghost-gold: rgba(212, 175, 55, 0.5);
-            --text-main: #e0e0e0;
-            --text-muted: #7a8599;
-            --accent-blue: #4facfe;
-            --border-color: rgba(138, 112, 42, 0.3);
+            --bg: #0a0a0a;
+            --fg: #ffffff;
+            --dim: #444;
+            --accent: #ff3e3e; /* 罗塞塔警告色 */
+            --grid-size: 50px;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * { margin: 0; padding: 0; box-sizing: border-box; cursor: crosshair; }
 
         body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: 'Playfair Display', serif;
-            overflow-x: hidden;
-            /* 允许文本选择，但防止拖拽图片干扰交互 */
-            user-select: none; 
-        }
-
-        /* 装饰线条 */
-        .line-deco {
-            position: fixed; top: 0; bottom: 0; width: 1px;
-            background: linear-gradient(to bottom, transparent, var(--gold-dim), transparent);
-            z-index: -2; opacity: 0.3;
-        }
-        .line-left { left: 4%; }
-        .line-right { right: 4%; }
-
-        /* ================= HUD 导航 ================= */
-        .hud-nav {
-            position: fixed; top: 0; width: 100%; height: 50px;
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 0 5%; background: rgba(5, 6, 8, 0.95);
-            border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-            z-index: 100; backdrop-filter: blur(5px);
-            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--gold-dim);
-        }
-
-        /* ================= HEADER (星空星盘) ================= */
-        header {
-            height: 100vh;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            text-align: center; position: relative;
+            background-color: var(--bg);
+            color: var(--fg);
+            font-family: 'Space Mono', monospace;
             overflow: hidden;
-            background: radial-gradient(circle at center, #1a1d29 0%, #050608 100%);
-            border-bottom: 2px solid var(--gold-dim);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
 
-        #starCanvas {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 0; opacity: 0.6;
-        }
-
-        .retro-grid {
-            position: absolute; bottom: 0; left: 0; width: 100%; height: 35vh;
+        /* 虚空背景网格 */
+        .void-grid {
+            position: fixed;
+            top: 0; left: 0; width: 200%; height: 200%;
             background-image: 
-                linear-gradient(rgba(212, 175, 55, 0.15) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(212, 175, 55, 0.15) 1px, transparent 1px);
-            background-size: 40px 40px;
-            background-position: center bottom;
-            transform: perspective(300px) rotateX(60deg) scale(2);
-            transform-origin: bottom center;
-            mask-image: linear-gradient(to top, black 0%, transparent 100%);
-            -webkit-mask-image: linear-gradient(to top, black 0%, transparent 100%);
-            z-index: 0;
-            animation: gridMove 20s linear infinite;
-        }
-        @keyframes gridMove { from { background-position: center 0; } to { background-position: center 40px; } }
-
-        .scanlines {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.2));
-            background-size: 100% 4px;
-            z-index: 10; pointer-events: none; opacity: 0.6;
+                linear-gradient(to right, rgba(255,255,255,0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: var(--grid-size) var(--grid-size);
+            z-index: -1;
+            transform: translate(-25%, -25%);
+            animation: drift 100s linear infinite;
         }
 
-        .astrolabe-ring {
-            position: absolute; border-radius: 50%;
-            border: 1px solid rgba(212, 175, 55, 0.15);
-            top: 50%; left: 50%; transform: translate(-50%, -50%);
-            pointer-events: none; z-index: 1;
-        }
-        .ring-1 { width: 650px; height: 650px; border-style: dashed; animation: spin 120s linear infinite; }
-        .ring-2 { width: 480px; height: 480px; border-color: rgba(79, 172, 254, 0.1); animation: spin 80s linear infinite reverse; }
-        @keyframes spin { from { transform: translate(-50%, -50%) rotate(0deg); } to { transform: translate(-50%, -50%) rotate(360deg); } }
-
-        .header-content {
-            z-index: 20; padding: 2rem;
-            background: radial-gradient(closest-side, rgba(5,6,8,0.7) 30%, transparent 100%);
-            backdrop-filter: blur(1px);
+        @keyframes drift {
+            from { transform: translate(-25%, -25%) rotate(0deg); }
+            to { transform: translate(-20%, -20%) rotate(1deg); }
         }
 
-        .hero-logo {
-            font-family: 'Cinzel', serif;
-            font-size: clamp(3rem, 8vw, 6rem);
-            color: transparent;
-            -webkit-text-stroke: 1px var(--gold);
-            position: relative; letter-spacing: 0.1em;
-            text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
-            margin-bottom: 10px;
-        }
-        .hero-logo::before {
-            content: 'ROSETTA'; position: absolute; left: 0; top: 0;
-            width: 100%; height: 100%; color: var(--gold);
-            overflow: hidden; border-right: 2px solid var(--accent-blue);
-            animation: typeFill 4s cubic-bezier(0.7, 0, 0.3, 1) forwards;
-            white-space: nowrap; opacity: 0.9;
-        }
-        @keyframes typeFill { 0% { width: 0; } 100% { width: 100%; border-right: none;} }
-
-        .est-text {
-            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
-            color: var(--accent-blue); letter-spacing: 0.5em; margin-bottom: 1rem;
-            text-transform: uppercase; opacity: 0.8;
+        /* 顶部扫描状态 */
+        nav {
+            padding: 20px;
+            border-bottom: 1px solid var(--dim);
+            display: flex;
+            justify-content: space-between;
+            background: rgba(10,10,10,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100;
         }
 
-        .ticker-wrap {
-            position: absolute; bottom: 0; width: 100%;
-            background: rgba(0,0,0,0.8); border-top: 1px solid var(--gold-dim);
-            height: 35px; overflow: hidden; display: flex; align-items: center;
-            z-index: 20;
-        }
-        .ticker {
-            display: inline-block; white-space: nowrap;
-            padding-left: 100%; animation: ticker 40s linear infinite;
-            font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: #888;
-        }
-        .ticker span { color: var(--gold); margin-right: 10px; font-weight: bold; }
-        .ticker-item { display: inline-block; margin-right: 60px; }
-        @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        .status-tag { color: var(--accent); font-weight: bold; }
+        .status-tag::before { content: "●"; margin-right: 8px; animation: blink 1s infinite; }
 
-        /* ================= 卡片与内容 ================= */
-        .container { max-width: 1400px; margin: 0 auto; padding: 0 5% 100px; }
-        
-        .section-title {
-            text-align: center; font-family: 'Cinzel', serif; font-size: 2rem;
-            margin: 6rem 0 3rem; color: var(--text-main);
-            display: flex; align-items: center; justify-content: center; gap: 20px;
-        }
-        .section-title::before, .section-title::after { content: ''; height: 1px; width: 50px; background: var(--gold-dim); }
+        @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 2.5rem; }
-
-        .card {
-            background: var(--card-bg); border: 1px solid var(--border-color);
-            border-top: 3px solid var(--gold-dim); padding: 2rem;
-            position: relative; transition: all 0.3s;
-            backdrop-filter: blur(5px); display: flex; flex-direction: column; min-height: 300px;
-            overflow: hidden; /* 防止图标溢出 */
-        }
-        .card:hover { transform: translateY(-5px); border-color: var(--gold); box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
-        .card.drag-over { box-shadow: 0 0 30px rgba(79, 172, 254, 0.3) inset; border-color: var(--accent-blue); }
-        .card.revealed { border-color: var(--accent-blue); box-shadow: 0 0 30px rgba(79, 172, 254, 0.3); }
-
-        .card-icon {
-            position: absolute; top: -10px; right: 10px; font-size: 5rem;
-            color: var(--gold); opacity: 0.05; transition: 0.5s;
-            z-index: 0;
-        }
-        .card:hover .card-icon { transform: rotate(15deg) scale(1.1); opacity: 0.15; }
-
-        .card-content-wrapper { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; }
-
-        .card-title { font-family: 'Cinzel', serif; font-size: 1.3rem; color: #fff; margin-bottom: 5px; }
-        .card-leader { font-family: 'Playfair Display', serif; font-style: italic; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; display:block; }
-        .card-desc { font-family: 'Playfair Display', serif; font-size: 0.95rem; color: #ccc; line-height: 1.6; margin-bottom: auto; }
-        
-        .secret-watermark {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            text-align: center; font-family: 'Cinzel', serif;
-            font-size: 1.1rem; color: var(--accent-blue); 
-            opacity: 0; pointer-events: none; transition: 0.5s; 
-            background: rgba(5, 6, 8, 0.95);
-            padding: 2rem; z-index: 10;
-        }
-        .card.revealed .secret-watermark { opacity: 1; pointer-events: auto; }
-
-        .card-footer {
-            margin-top: 20px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.05);
-            font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; color: var(--text-muted);
-        }
-        .mohs-bar { width: 100%; height: 2px; background: rgba(255,255,255,0.1); margin-top: 8px; }
-        .mohs-fill { height: 100%; background: var(--gold); width: 0; transition: 1s; }
-
-        /* ================= 交互道具 ================= */
-        .drag-source {
-            position: fixed; bottom: 30px; right: 30px;
-            width: 50px; height: 50px;
-            border-radius: 50%;
-            background: rgba(79, 172, 254, 0.05);
-            border: 1px solid rgba(79, 172, 254, 0.3);
-            cursor: grab; z-index: 1000;
-            display: flex; justify-content: center; align-items: center;
-            opacity: 0.3; transition: all 0.5s ease;
-            box-shadow: 0 0 10px rgba(79, 172, 254, 0.1);
-        }
-        .drag-source:hover {
-            opacity: 1; background: rgba(79, 172, 254, 0.1);
-            box-shadow: 0 0 20px rgba(79, 172, 254, 0.6);
-            transform: scale(1.1);
-        }
-        .drag-source i { color: #4facfe; font-size: 1.2rem; }
-
-        /* 模态框 */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.9); display: flex; justify-content: center; align-items: center;
-            opacity: 0; visibility: hidden; transition: 0.3s; z-index: 2000; backdrop-filter: blur(5px);
-        }
-        .modal-overlay.active { opacity: 1; visibility: visible; }
-        .modal-content {
-            background: #0e1116; border: 1px solid var(--gold); width: 90%; max-width: 600px;
-            padding: 3rem; position: relative; box-shadow: 0 0 50px rgba(212, 175, 55, 0.2);
-        }
-        /* 移动端适配 */
-        @media (max-width: 768px) {
-            .line-deco { display: none; }
-            .hero-logo { font-size: 3rem; }
-            .container { padding: 0 20px 100px; }
+        /* 主画布：坐标映射区 */
+        main {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
         }
 
+        /* 坐标点样式 */
+        .node {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background: var(--fg);
+            transform: translate(-50%, -50%);
+            transition: all 0.3s ease;
+        }
+
+        .node::before {
+            content: "";
+            position: absolute;
+            top: 50%; left: 50%;
+            width: 30px; height: 30px;
+            border: 1px solid var(--dim);
+            transform: translate(-50%, -50%);
+            transition: 0.3s;
+        }
+
+        .node:hover { background: var(--accent); scale: 1.5; }
+        .node:hover::before { border-color: var(--accent); width: 45px; height: 45px; }
+
+        .node-label {
+            position: absolute;
+            left: 20px;
+            top: -10px;
+            white-space: nowrap;
+            font-size: 10px;
+            letter-spacing: 2px;
+            opacity: 0.4;
+            transition: 0.3s;
+        }
+
+        .node:hover .node-label { opacity: 1; color: var(--accent); }
+
+        /* 详情侧边栏 */
+        #detail-pane {
+            position: fixed;
+            right: -400px;
+            top: 0;
+            width: 400px;
+            height: 100vh;
+            background: rgba(255,255,255,0.02);
+            border-left: 1px solid var(--dim);
+            backdrop-filter: blur(20px);
+            padding: 80px 40px;
+            transition: 0.5s cubic-bezier(0.2, 1, 0.3, 1);
+            z-index: 200;
+        }
+
+        #detail-pane.active { right: 0; }
+
+        .detail-header { border-bottom: 2px solid var(--fg); padding-bottom: 10px; margin-bottom: 30px; }
+        .detail-title { font-size: 24px; text-transform: uppercase; }
+        .detail-coord { font-size: 10px; color: var(--dim); margin-top: 5px; }
+        .detail-body { font-size: 14px; line-height: 1.8; color: #ccc; }
+
+        /* UI 装饰：十字准心 */
+        .crosshair-v { position: fixed; left: 50%; top: 0; width: 1px; height: 100%; background: rgba(255,255,255,0.05); pointer-events: none; }
+        .crosshair-h { position: fixed; left: 0; top: 50%; width: 100%; height: 1px; background: rgba(255,255,255,0.05); pointer-events: none; }
+
+        .terminal-output {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            font-size: 9px;
+            color: var(--dim);
+            max-width: 300px;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <div class="line-deco line-left"></div>
-    <div class="line-deco line-right"></div>
+    <div class="void-grid"></div>
+    <div class="crosshair-v"></div>
+    <div class="crosshair-h"></div>
 
-    <nav class="hud-nav">
-        <div><i class="fas fa-circle" style="color:#0f0; font-size:8px; margin-right:5px;"></i> SYSTEM: ONLINE</div>
-        <div id="clock">00:00:00 UTC</div>
+    <nav>
+        <div>ROSETTA IMPERIAL INSTITUTE // ARCHIVE_v4.0</div>
+        <div class="status-tag">WANDERING_SOUL_DETECTED</div>
     </nav>
 
-    <header>
-        <canvas id="starCanvas"></canvas>
-        <div class="retro-grid"></div>
-        <div class="scanlines"></div>
-        <div class="astrolabe-ring ring-1"></div>
-        <div class="astrolabe-ring ring-2"></div>
+    <main id="map-area">
+        </main>
 
-        <div class="header-content">
-            <div class="est-text">Established in Genesis Era</div>
-            <div class="hero-logo">ROSETTA</div>
-            <div style="font-family: 'Cinzel'; font-size: 1.2rem; color: #fff; letter-spacing: 4px; border-top: 1px solid var(--gold-dim); padding-top: 10px; margin-top: 10px; display: inline-block;">
-                IMPERIAL INSTITUTE
-            </div>
-            <div style="margin-top: 1.5rem; font-family: 'Playfair Display'; font-style: italic; color: #aaa; font-size: 1rem;">
-                “以自然神的指示，为伟大的罗塞塔帝国研究所的消亡默哀。”
-            </div>
+    <div id="detail-pane">
+        <div class="detail-header">
+            <div class="detail-title" id="p-title">SELECT NODE</div>
+            <div class="detail-coord" id="p-coord">COORD: 000.00 / 000.00</div>
         </div>
-
-        <div class="ticker-wrap">
-            <div class="ticker">
-                <div class="ticker-item"><span>[NEWS]</span> Dionysus Project Phase V initiated.</div>
-                <div class="ticker-item"><span>[ALERT]</span> EEE firewall integrity at 99.9%.</div>
-                <div class="ticker-item"><span>[NOTICE]</span> Madeleine's tea party starts at 15:00.</div>
-                <div class="ticker-item"><span>[WARN]</span> Rain detected in Geneva Sector.</div>
-                <div class="ticker-item"><span>[QUOTE]</span> "Calculating the stars since creation."</div>
-            </div>
+        <div class="detail-body" id="p-desc">
+            点击虚空中的坐标点以提取罗塞塔档案数据包。
         </div>
-    </header>
-
-    <div class="container">
-        <h2 class="section-title"><i class="fas fa-chess-king"></i> The Committee</h2>
-        <div class="grid" id="grid-level1"></div>
-
-        <h2 class="section-title"><i class="fas fa-atom"></i> Secondary Institutes</h2>
-        <div class="grid" id="grid-level2"></div>
-
-        <h2 class="section-title"><i class="fas fa-mug-hot"></i> Tertiary Institutes</h2>
-        <div class="grid" id="grid-level3"></div>
     </div>
 
-    <footer style="border-top: 1px solid var(--gold-dim); padding: 3rem 5%; background: #020203; text-align: center; font-family: 'JetBrains Mono'; font-size: 0.8rem; color: #555;">
-        <p>© IMPERIAL INSTITUTE OF ROSETTA ARCHIVES</p>
-        <p style="margin-top:10px;">Security Level 5 Clearance Required</p>
-    </footer>
-
-    <div class="drag-source" draggable="true" id="secretGem" title="Drag to reveal secrets">
-        <i class="fas fa-droplet"></i>
-    </div>
-
-    <div class="modal-overlay" id="modal">
-        <div class="modal-content">
-            <button onclick="document.getElementById('modal').classList.remove('active')" style="position:absolute; top:15px; right:20px; background:none; border:none; color:var(--gold); font-size:2rem; cursor:pointer; z-index:100;">×</button>
-            <div id="modal-body"></div>
-        </div>
+    <div class="terminal-output" id="terminal">
+        [INIT] SYSTEM BOOT...<br>
+        [OK] GRID SYNCED.<br>
+        [OK] MAPPING VOID COORDINATES...
     </div>
 
     <script>
-        // ================= HEADER CANVAS 动画 =================
-        const canvas = document.getElementById('starCanvas');
-        const ctx = canvas.getContext('2d');
-        let width, height;
-        let particles = [];
-
-        function resize() {
-            width = canvas.width = window.innerWidth;
-            height = canvas.height = window.innerHeight;
-        }
-        window.addEventListener('resize', resize);
-        resize();
-
-        class Particle {
-            constructor() {
-                this.x = Math.random() * width;
-                this.y = Math.random() * height;
-                this.vx = (Math.random() - 0.5) * 0.5;
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.size = Math.random() * 2 + 1;
-                this.color = `rgba(212, 175, 55, ${Math.random() * 0.5})`;
-            }
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                if(this.x < 0) this.x = width;
-                if(this.x > width) this.x = 0;
-                if(this.y < 0) this.y = height;
-                if(this.y > height) this.y = 0;
-            }
-            draw() {
-                ctx.fillStyle = this.color;
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
-                ctx.fill();
-            }
-        }
-        for(let i=0; i<80; i++) particles.push(new Particle());
-
-        function animate() {
-            ctx.clearRect(0, 0, width, height);
-            for(let i=0; i<particles.length; i++) {
-                particles[i].update();
-                particles[i].draw();
-                for(let j=i; j<particles.length; j++) {
-                    const dx = particles[i].x - particles[j].x;
-                    const dy = particles[i].y - particles[j].y;
-                    const dist = Math.sqrt(dx*dx + dy*dy);
-                    if(dist < 120) {
-                        ctx.strokeStyle = `rgba(212, 175, 55, ${0.15 - dist/800})`;
-                        ctx.lineWidth = 0.5;
-                        ctx.beginPath();
-                        ctx.moveTo(particles[i].x, particles[i].y);
-                        ctx.lineTo(particles[j].x, particles[j].y);
-                        ctx.stroke();
-                    }
-                }
-            }
-            requestAnimationFrame(animate);
-        }
-        animate();
-
-        // ================= 业务逻辑 =================
-        setInterval(() => {
-            const now = new Date();
-            document.getElementById('clock').innerText = now.toISOString().split('T')[1].split('.')[0] + " UTC";
-        }, 1000);
-
-        // 已为您补充 'icon' 字段，对应 FontAwesome 图标
-        const database = [
-            { id: 'scc', level: 1, icon: 'fa-sun', color: '#d4af37', name: 'Starry Counters Committee', cnName: '星空计数人委员会', leader: 'Elizabeth Maggie', loc: 'Dubai, Saudi Arabia', desc: '罗塞塔帝国研究所的核心大脑。统筹狄俄尼修斯计划与星空计数事务。', secret: '“这里是爱丽丝的恶作剧。”', fullText: '责任会长: 伊丽莎白·玛吉。<br>地点: 哈利法塔。一切的起点，也是终点。' },
-            { id: 'vivian', level: 2, icon: 'fa-radiation', color: '#800020', name: 'Inst. of Heavy Elements', cnName: '薇薇安学院', leader: 'Vivian Lise Meitner', loc: 'Leipzig, Germany', code: 'Red Beryl (7.5)', desc: '历史最悠久的二级机构。提供了模拟粒子对撞机方案。', secret: '“那个长睫毛的院长其实很温柔。”', fullText: '全称: 罗塞塔帝国研究所附属重元素与理论物理研究院。<br>一级代号: 【红色线柱石】 (莫氏硬度: 7.5)。<br>薇薇安是研究所最受尊敬的院长之一。第109号元素以她命名。' },
-            { id: 'honey', level: 2, icon: 'fa-paw', color: '#ff0000', name: 'Honey Badger Commando', cnName: '蜜獾突击队', leader: 'Iris Victoria', loc: 'London, UK', code: 'Ruby (9.0)', desc: '有神力者特别观测站。负责间谍潜伏与暗杀任务。', secret: '“先生您好，这里是爱丽丝·维多利亚。”', fullText: '全称: 罗塞塔帝国研究所附属有神力者特别观测站与秘密事务执行处。<br>一级代号: 【红宝石】。<br>蜜獾是胆量最大的哺乳动物。' },
-            { id: 'math', level: 2, icon: 'fa-infinity', color: '#4facfe', name: 'Inst. of Applied Mathematics', cnName: '应用数学研究院', leader: 'Lowery Nihility', loc: 'Naples, Italy', code: 'Unknown', desc: '负责构建罗塞塔帝国研究所的数学基石与逻辑模型。', secret: '“虚无(Nihility)并不代表不存在。”', fullText: '全称: 罗塞塔帝国研究所附属应用数学研究院。<br>院长: 洛厄里·奈希勒提。<br>地点: 那不勒斯，意大利。' },
-            { id: 'physics', level: 2, icon: 'fa-magnet', color: '#1e3a8a', name: 'Inst. of Applied Physics', cnName: '应用物理研究院', leader: 'Hypatia', loc: 'Dublin, Ireland', code: 'Changesite(6.0+)', desc: '致力于物理法则的应用与工程化。', secret: '“为了纪念那位亚历山大图书馆的女儿。”', fullText: '全称: 罗塞塔帝国研究所附属应用物理研究院。<br>院长: 希帕媞娅。<br>地点: 都柏林，爱尔兰。' },
-            { id: 'riken', level: 2, icon: 'fa-flask', color: '#581c87', name: 'Riken (Phys-Chem)', cnName: '理化学研究院', leader: 'Tapetit Berat Ecari', loc: 'Paris, France', code: 'Diamond(10.0)', desc: '跨学科研究的前沿阵地，融合物理与化学的奇迹。', secret: '“埃卡里院长正在看着你。哈哈，开玩笑的。”', fullText: '全称: 罗塞塔帝国研究所附属理化学研究院。<br>院长: 塔贝蒂·贝拉特·埃卡里。<br>地点: 巴黎，法国。' },
-            { id: 'icc', level: 2, icon: 'fa-scale-balanced', color: '#2f3e46', name: 'I.C.C.', cnName: '国际威慑委员会', leader: 'Alexander Pluto Ritter', loc: 'Times Square, NY, USA', code: 'Padparadscha Sapphire(9.0)', desc: '政府间友好关系协商与国际威慑委员会。', secret: '“威慑(Deterrence)才是和平的前提。”', fullText: '全称: 罗塞塔帝国研究所政府间友好关系协商与国际威慑委员会。<br>责任委员长: 亚历山大·布鲁托·里特尔。<br>地点: 纽约时代广场。' },
-            { id: 'data', level: 2, icon: 'fa-database', color: '#d4af37', name: 'Data Processing Center', cnName: '数据处理与预算中心', leader: 'Edward von Parmian', loc: 'Philadelphia, PA, USA', code: 'Topaz (8.0)', desc: '数字生命 "EEE" 的诞生地，也是研究所的金库。', secret: '“其实就是个巨大的水獭储蓄罐。”', fullText: '全称: 罗塞塔帝国研究所综合数据处理与经济预算中心。<br>一级代号: 【托帕石】。<br>组长: 爱德华·德·帕米安 (图灵)。<br>此处诞生了远超时代的光子计算机和人工智能。' },
-            { id: 'raccoon', level: 2, icon: 'fa-shield-halved', color: '#333', name: 'Raccoon Club', cnName: '适应性武装作战部队', leader: 'Ferdinand de Saussure', loc: 'Churchill, Canada', code: 'Sapphire(9.0)', desc: '总司令处。负责武装作战与海岸巡逻。', secret: '“为什么叫浣熊？因为干脆面好吃吗？”', fullText: '全称: 罗塞塔帝国研究所适应性综合武装作战部队总司令处 (浣熊俱乐部)。<br>司令: 费尔迪南·德·索绪尔。<br>地点: 加拿大丘吉尔镇。' },
-            { id: 'library', level: 2, icon: 'fa-book-journal-whills', color: '#006400', name: 'Library of Moliere', cnName: '莫里哀图书馆', leader: 'Albert Theodore Ghiorso', loc: 'Versailles, France', code: 'Indicolite (7.5)', desc: '特殊文献资料存放处。无论多么危险的知识，这里都有。', secret: '“外院的神秘小恐龙玩偶其实是院长。”', fullText: '全称: 罗塞塔帝国研究所特殊文献资料存放处。<br>一级代号: 【靛青电气石】。<br>馆长: 阿尔伯特·西奥多·吉奥索。<br>总而言之，这个地方很特殊，也很神秘。' },
-            { id: 'astro', level: 2, icon: 'fa-star', color: '#fff', name: 'Hubble-Kepler Observatory', cnName: '哈勃·开普勒天文台', leader: 'Hipparchus', loc: 'Panama City, Panama', code: 'Unknown', desc: '今天你看星星了吗？', secret: '“没有，因为我长大了。”', fullText: '全称: 罗塞塔帝国研究所爱德文·哈勃·开普勒天文台。<br>长官: 希帕克斯。<br>地点: 巴拿马城。' },
-            { id: 'crypto', level: 2, icon: 'fa-key', color: '#8a702a', name: 'Inst. of Cryptography', cnName: '语言与密码学研究院', leader: 'Saussure / Morse', loc: 'Geneva, Switzerland', code: 'Vesuvianite (6.5)', desc: '加密、反间谍与文件保护。雨痕密码的发源地。', secret: '“别称：日内瓦养老院。”', fullText: '全称: 罗塞塔帝国研究所语言、符号与密码学研究院。<br>地点: 瑞士日内瓦。<br>这里生活优渥，被戏称为“养老院”。洛芙尔在此发明了黄金魔方。' },
-            { id: 'madeleine', level: 3, icon: 'fa-cookie-bite', color: '#e0b0ff', name: 'Madeleine Institute', cnName: '玛德琳研究院', leader: 'Arcadia C. Madeleine', loc: 'Lyon, France', code: 'Monazite (5.25)', desc: '虽是三级机构，却是研究所内最甜蜜、影响力最大的地方。', secret: '“蛋糕里可能藏着炸弹哦。”', fullText: '全称: 罗塞塔帝国研究所附属下午茶艺术玛德琳研究院。<br>一级代号: 【独居石】。<br>活着是为了什么？为了玛德琳小蛋糕。' }
+        const data = [
+            { name: "星空计数人委员会", id: "SCC", x: 20, y: 30, desc: "罗塞塔帝国研究所的核心大脑。统筹狄俄尼修斯计划与星空计数事务。" },
+            { name: "薇薇安学院", id: "VIV", x: 75, y: 25, desc: "重元素与理论物理研究院。提供了模拟粒子对撞机方案。" },
+            { name: "蜜獾突击队", id: "HBC", x: 40, y: 80, desc: "有神力者特别观测站。负责间谍潜伏与暗杀任务。" },
+            { name: "应用数学研究院", id: "MAT", x: 15, y: 65, desc: "负责构建罗塞塔帝国研究所的数学基石与逻辑模型。" },
+            { name: "理化学研究院", id: "RIKEN", x: 85, y: 70, desc: "跨学科研究的前沿阵地，融合物理与化学的奇迹。" },
+            { name: "玛德琳研究院", icon: "🍰", x: 60, y: 55, desc: "附属下午茶艺术研究院。活着是为了什么？为了玛德琳小蛋糕。" }
         ];
 
-        function render() {
-            const grid1 = document.getElementById('grid-level1');
-            const grid2 = document.getElementById('grid-level2');
-            const grid3 = document.getElementById('grid-level3');
+        const mapArea = document.getElementById('map-area');
+        const pane = document.getElementById('detail-pane');
+        const term = document.getElementById('terminal');
 
-            database.forEach(item => {
-                const card = document.createElement('div');
-                card.className = 'card';
-                if(item.color) card.style.borderTopColor = item.color;
+        // 生成节点
+        data.forEach(item => {
+            const node = document.createElement('div');
+            node.className = 'node';
+            node.style.left = item.x + '%';
+            node.style.top = item.y + '%';
+            
+            node.innerHTML = `<div class="node-label">${item.id || 'NODE'} // ${item.name}</div>`;
+            
+            node.onclick = (e) => {
+                e.stopPropagation();
+                document.getElementById('p-title').innerText = item.name;
+                document.getElementById('p-coord').innerText = `COORD: ${item.x}.00 / ${item.y}.00 [STABLE]`;
+                document.getElementById('p-desc').innerHTML = item.desc;
+                pane.classList.add('active');
+                addLog(`[ACCESS] ${item.name} 数据解密成功。`);
+            };
 
-                card.setAttribute('ondrop', 'drop(event)');
-                card.setAttribute('ondragover', 'allowDrop(event)');
-                card.setAttribute('ondragleave', 'leaveDrop(event)');
-                card.onclick = (e) => {
-                    if(e.target.classList.contains('secret-watermark')) return; 
-                    openModal(item);
-                };
-
-                let hardnessWidth = '0%';
-                let codeDisplay = item.code || 'UNKNOWN';
-                if(item.code && /\d/.test(item.code)) {
-                    const match = item.code.match(/[\d\.]+/);
-                    if(match) {
-                        const val = parseFloat(match[0]);
-                        hardnessWidth = Math.min((val / 10 * 100), 100) + '%';
-                    }
-                }
-
-                card.innerHTML = `
-                    <div class="card-content-wrapper">
-                        <div style="display:flex; justify-content:space-between; margin-bottom:10px;">
-                            <div style="font-family:'JetBrains Mono'; font-size:0.7rem; color:var(--gold); border:1px solid rgba(212,175,55,0.3); padding:2px 6px;">
-                                ${codeDisplay.split('(')[0]}
-                            </div>
-                        </div>
-                        <h3 class="card-title">${item.name}</h3>
-                        <span class="card-leader">${item.leader}</span>
-                        <p class="card-desc">${item.desc}</p>
-                        <div class="secret-watermark">${item.secret}</div>
-                        <div class="card-footer">
-                            <div>LOC: ${item.loc.split(',').pop().trim().toUpperCase()}</div>
-                            <div class="mohs-bar"><div class="mohs-fill" style="width:${hardnessWidth}; background:${item.color || '#d4af37'}"></div></div>
-                        </div>
-                    </div>
-                    <i class="card-icon fas ${item.icon}"></i>
-                `;
-
-                if (item.level === 1) grid1.appendChild(card);
-                else if (item.level === 2) grid2.appendChild(card);
-                else grid3.appendChild(card);
-            });
-        }
-
-        const gem = document.getElementById('secretGem');
-        gem.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData("text/plain", "secret-trigger");
-            gem.style.opacity = '0.5';
+            mapArea.appendChild(node);
         });
-        gem.addEventListener('dragend', () => gem.style.opacity = '');
 
-        function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.classList.add('drag-over'); }
-        function leaveDrop(ev) { ev.currentTarget.classList.remove('drag-over'); }
-        function drop(ev) {
-            ev.preventDefault();
-            const card = ev.currentTarget;
-            card.classList.remove('drag-over');
-            if (ev.dataTransfer.getData("text/plain") === "secret-trigger") {
-                card.classList.add('revealed');
-                setTimeout(() => card.classList.remove('revealed'), 8000); // 8秒后自动隐藏秘密
-            }
+        // 点击空白处关闭
+        document.body.onclick = () => {
+            pane.classList.remove('active');
+            addLog(`[IDLE] 等待指令...`);
         }
 
-        function openModal(item) {
-            const body = document.getElementById('modal-body');
-            body.innerHTML = `
-                <div style="text-align:center; color:${item.color || '#d4af37'}; font-size:3rem; margin-bottom:1rem;">
-                    <i class="fas ${item.icon}"></i>
-                </div>
-                <h2 style="font-family:'Cinzel'; color:#d4af37; margin-bottom:0.5rem; text-align:center;">${item.cnName}</h2>
-                <div style="font-family:'JetBrains Mono'; font-size:0.8rem; color:#666; margin-bottom:2rem; text-align:center;">${item.name.toUpperCase()}</div>
-                <p style="font-family:'Playfair Display'; font-size:1.1rem; line-height:1.8; color:#ddd; border-left:2px solid #8a702a; padding-left:20px;">${item.fullText}</p>
-                <div style="margin-top:2rem; padding-top:1rem; border-top:1px solid #333; font-size:0.8rem; color:#555; font-family:'JetBrains Mono';">
-                    ARCHIVE ID: ${item.id.toUpperCase()}-${Math.floor(Math.random()*9999)}
-                </div>
-            `;
-            document.getElementById('modal').classList.add('active');
+        function addLog(msg) {
+            const line = document.createElement('div');
+            line.innerHTML = `> ${msg}`;
+            term.appendChild(line);
+            if (term.childNodes.length > 8) term.removeChild(term.firstChild);
         }
 
-        document.addEventListener('DOMContentLoaded', render);
+        // 鼠标移动跟随
+        document.addEventListener('mousemove', (e) => {
+            const x = (e.clientX / window.innerWidth * 100).toFixed(2);
+            const y = (e.clientY / window.innerHeight * 100).toFixed(2);
+            // 这里可以添加实时坐标显示的逻辑
+        });
+
     </script>
 </body>
 </html>
